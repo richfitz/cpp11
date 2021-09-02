@@ -263,30 +263,35 @@ get_call_entries <- function(path, names, package) {
 
   close(con)
 
-  start <- grep("/\\* \\.(Call|C) calls \\*/", res)
+  extract <- function(str, start, end) {
+    i_start <- grep(start, str, fixed = TRUE)
+    if (length(i_start) == 0) {
+      return(NULL)
+    }
+    i_end <- which(end == str)
+    i_end <- min(i_end[i_end > i_start])
+    str[seq(i_start, i_end)]
+  }
 
-  if (length(start) == 0) {
+  call_entries <- extract(res, "static const R_CallMethodDef CallEntries[]", "};")
+  call_calls <- extract(res, "/* .Call calls */", "")
+  c_calls <- extract(res, "/* .C calls */", "")
+  c_entries <- extract(res, "static const R_CMethodDef CEntries[]", "};")
+
+  if (is.null(call_entries)) {
     return("")
   }
 
   redundant <- glue::glue_collapse(glue::glue('extern SEXP _{package}_{names}'), sep = '|')
-
   if (length(redundant) > 0) {
     redundant <- paste0("^", redundant)
-    res <- res[!grepl(redundant, res)]
+    call_calls <- call_calls[!grepl(redundant, call_calls)]
+    if (!any(grepl("extern SEXP", call_calls, fixed = TRUE))) {
+      call_calls <- ""
+    }
   }
 
-  end <- grep("};", res, fixed = TRUE)
-
-  call_calls <- startsWith(res, "extern SEXP")
-
-  if(any(call_calls)) {
-    return(res[seq(min(start), max(end))])
-  }
-
-  mid <- grep("static const R_CallMethodDef CallEntries[] = {", res, fixed = TRUE)
-
-  res[seq(mid, max(end))]
+  c(c_calls, call_calls, c_entries, call_entries)
 }
 
 pkg_links_to_rcpp <- function(path) {
