@@ -109,6 +109,7 @@ extern \"C\" SEXP _testPkg_baz(SEXP run, SEXP value) {
 }
 
 extern \"C\" {
+
 static const R_CallMethodDef CallEntries[] = {
     {\"_testPkg_bar\", (DL_FUNC) &_testPkg_bar, 1},
     {\"_testPkg_baz\", (DL_FUNC) &_testPkg_baz, 2},
@@ -591,6 +592,7 @@ extern \"C\" SEXP _testPkg_foo() {
 }
 
 extern \"C\" {
+
 static const R_CallMethodDef CallEntries[] = {
     {\"_testPkg_foo\", (DL_FUNC) &_testPkg_foo, 0},
     {NULL, NULL, 0}
@@ -839,6 +841,7 @@ test_that("registration of package with both cpp11::register and .C is possible"
 
 
 #include \"cpp11/declarations.hpp\"
+#include <R_ext/Visibility.h>
 
 // code_cpp.cpp
 double add_cpp(double a, double b);
@@ -863,7 +866,7 @@ static const R_CallMethodDef CallEntries[] = {
 };
 }
 
-extern \"C\" void R_init_testPkg(DllInfo* dll){
+extern \"C\" attribute_visible void R_init_testPkg(DllInfo* dll){
   R_registerRoutines(dll, CEntries, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, FALSE);
   R_forceSymbols(dll, TRUE);
@@ -910,6 +913,7 @@ test_that("registration of package with cpp11::register, .Call and .C is possibl
 
 
 #include \"cpp11/declarations.hpp\"
+#include <R_ext/Visibility.h>
 
 // code_cpp.cpp
 double add_cpp(double a, double b);
@@ -937,7 +941,7 @@ static const R_CallMethodDef CallEntries[] = {
 };
 }
 
-extern \"C\" void R_init_testPkg(DllInfo* dll){
+extern \"C\" attribute_visible void R_init_testPkg(DllInfo* dll){
   R_registerRoutines(dll, CEntries, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, FALSE);
   R_forceSymbols(dll, TRUE);
